@@ -13,9 +13,7 @@
 #define MIN_SPEED 1090
 #define MAX_SPEED 1200
 
-#define WIFI_NETWORK "The Promised LAN"
-#define WIFI_PASSWORD "watermelonwisperer"
-#define WIFI_TIMEOUT_MS 30000
+#define SSID "DRONE"
 #define PORT 8989
 
 ESC esc_front_left (ESC_PIN_FRONT_LEFT, 1000, 2000, 500); // ESC_Name (PIN, Minimum Value, Maximum Value, Arm Value)
@@ -24,25 +22,6 @@ ESC esc_back_left (ESC_PIN_BACK_LEFT, 1000, 2000, 500);
 ESC esc_back_right (ESC_PIN_BACK_RIGHT, 1000, 2000, 500);
 
 AsyncUDP udp;
-
-void connectToWiFi() {
-  Serial.print("Connecting to WiFi...");
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_NETWORK, WIFI_PASSWORD);
-    
-  uint32_t start_time = millis();
-    
-  while(WiFi.status() != WL_CONNECTED && millis() - start_time < WIFI_TIMEOUT_MS) {
-    Serial.print(".");
-    delay(100);
-  }
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("Connected to WiFi");
-  } else {
-    Serial.println("Failed to connect to WiFi");
-    delay(2000);
-  }
-}
 
 void init_ESCs() {
   pinMode(ESC_PIN_FRONT_LEFT, OUTPUT);
@@ -69,7 +48,11 @@ void setup() {
 
   init_ESCs();
 
-  connectToWiFi();
+  WiFi.softAP(SSID);
+  IPAddress IP = WiFi.softAPIP();
+  Serial.print("server IP address: ");
+  Serial.println(IP);
+
   udp.listen(PORT);
   udp.onPacket([](AsyncUDPPacket packet) {
     const char* raw_msg = reinterpret_cast<char*>(packet.data());
