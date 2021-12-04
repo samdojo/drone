@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <ESP32Servo.h> // ESP32Servo library installed by Library Manager
 #include "ESC.h" // RC_ESP library installed by Library Manager
+#include "AsyncUDP.h"
 
 #define ESC_PIN_FRONT_LEFT 19
 #define ESC_PIN_FRONT_RIGHT 14
@@ -22,7 +23,7 @@ ESC esc_front_right (ESC_PIN_FRONT_RIGHT, 1000, 2000, 500);
 ESC esc_back_left (ESC_PIN_BACK_LEFT, 1000, 2000, 500);
 ESC esc_back_right (ESC_PIN_BACK_RIGHT, 1000, 2000, 500);
 
-WiFiServer server(PORT);
+AsyncUDP udp;
 
 void connectToWiFi() {
   Serial.print("Connecting to WiFi...");
@@ -69,15 +70,10 @@ void setup() {
   init_ESCs();
 
   connectToWiFi();
-  server.begin();
-  delay(8000);
-  Serial.println("...ready");
-}
-
-void loop() {
-  WiFiClient client = server.available();
-  if (client) {
-    String msg = client.readStringUntil('\n');
+  udp.listen(PORT);
+  udp.onPacket([](AsyncUDPPacket packet) {
+    const char* raw_msg = reinterpret_cast<char*>(packet.data());
+    String msg(raw_msg);
     Serial.println(msg);
     int speed = msg.substring(2).toInt();
     constexpr float percent_speed = (MAX_SPEED - MIN_SPEED) / 100.0;
@@ -110,6 +106,11 @@ void loop() {
     else {
       Serial.println("ERROR: recieved unknown command");
     }
-  }
+  });
+  delay(8000);
+  Serial.println("...ready");
+}
+
+void loop() {
 }
 
