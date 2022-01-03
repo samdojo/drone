@@ -23,6 +23,12 @@ ESC esc_back_right (ESC_PIN_BACK_RIGHT, 1000, 2000, 500);
 
 AsyncUDP udp;
 
+struct Point {
+  double x;
+  double y;
+  double z;
+};
+
 void init_ESCs() {
   pinMode(ESC_PIN_FRONT_LEFT, OUTPUT);
   pinMode(ESC_PIN_FRONT_RIGHT, OUTPUT);
@@ -94,6 +100,34 @@ void setup() {
   Serial.println("...ready");
 }
 
-void loop() {
+double sqr(double num) {
+  return num * num;
 }
 
+double length_squared(Point a, Point b) {
+  return sqr(b.x - a.x) + sqr(b.y - a.y) + sqr(b.z - a.z);
+}
+
+double error(Point current_position, Point desired_position, Point calibrated_position) {
+  double numerator = length_squared(current_position, desired_position)
+                   + length_squared(calibrated_position, desired_position)
+                   - length_squared(current_position, calibrated_position);
+  double denominator = 2.0 * sqrt(length_squared(calibrated_position, desired_position));
+  return numerator / denominator;
+}
+
+double error_slope(double current_error) {
+  static double previous_error = 0.0;
+  double slope = current_error - previous_error;
+  previous_error = current_error;
+  return slope;
+}
+
+double error_integral(double current_error) {
+  static double total_error = 0.0;
+  total_error += current_error;
+  return total_error;
+}
+
+void loop() {
+}
