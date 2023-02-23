@@ -11,7 +11,7 @@
 //#define OTHER 4
 
 #define MIN_SPEED 1090
-#define MAX_SPEED 1200
+#define MAX_SPEED 1500
 
 #define SSID "DRONE"
 #define PORT 8989
